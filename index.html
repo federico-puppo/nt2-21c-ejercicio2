@@ -12,11 +12,30 @@
 
 </head>
 
-
 <div class="container-fluid mt-3" id="app">
-    <input type="text" class="form-control" v-model="criterioDeBusqueda"
-        placeholder="Ingresar un criterio de busqueda...">
+    <form>
+        <div class="form-group">
+            <label>Filtro Nombre:</label>
+            <input type="text" class="form-control" v-model="criterioNombre" placeholder="Nombre y/o apellido">
+                <small v-if="criterioNombre.length < 3" class="alert alert-warning" role="alert" style="top: 12px">
+                    Escribe al menos 3 caracteres!</small>
+                <small v-if="criterioNombre.length != 0 && !isNaN(criterioNombre)" class="alert alert-warning" role="alert" style="top: 12px">
+                    No puede contener numeros!</small>
+        </div>
+        <br>
+        <div class="form-group">
+            <label>Filtro DNI:</label>
+            <input type="text" class="form-control" v-model="criterioDni" placeholder="DNI">
+            <small v-if="criterioDni.length < 3" class="alert alert-warning" role="alert" style="top: 12px">
+                Escribe al menos 3 caracteres!</small>
+            <small v-if="criterioDni.length != 0 && isNaN(criterioDni)" class="alert alert-warning" role="alert" style="top: 12px">
+                No puede contener letras!</small>
+        </div>
+    </form>
     <br>
+    <div v-if="!personasFiltradas.length">
+        <h4>Sin resultados</h4>
+    </div>
     <div class="card-deck m-0">
         <div class="row">
             <div class="col" v-for="persona in personasFiltradas">
@@ -39,8 +58,10 @@
     new Vue({
         el: '#app',
         data: {
-            criterioDeBusqueda: '',
-            //Aquí, en este array es donde tienen que agregar su información
+            criterioNombre: '',
+            criterioDni: '',
+            filtroNombreActivo: false,
+            filtroDniActivo: false,
             personas: [
                 {
                     nombre: "Daniel",
@@ -172,15 +193,24 @@
         },
         computed: {
             personasFiltradas() {
+                this.filtroNombreActivo = (isNaN(this.criterioNombre) && this.criterioNombre.length >= 3) ? true : false
+                this.filtroDniActivo = (!isNaN(this.criterioDni) && this.criterioDni.length >= 3) ? true : false
                 return this.personas.filter((persona) => {
                     let registroCompleto = `${persona.nombre} ${persona.apellido} ${persona.dni} ${persona.correo}`
-                    return registroCompleto.toLowerCase().includes(this.criterioDeBusqueda.toLowerCase())
+                    let nombrePersona = `${this.getNombreCompleto(persona)}`
+                    let dniPersona = `${this.getDni(persona)}`
+                    let nombre = (this.filtroNombreActivo) ? `${this.criterioNombre.toLowerCase()}` : ""
+                    let dni = (this.filtroDniActivo) ? `${this.criterioDni}` : ""
+                    return (dniPersona.includes(dni) && nombrePersona.toLowerCase().includes(nombre))
                 });
             }
         },
         methods: {
             getNombreCompleto(persona) {
                 return `${persona.nombre} ${persona.apellido}`
+            },
+            getDni(persona) {
+                return `${persona.dni}`
             }
         }
     });
